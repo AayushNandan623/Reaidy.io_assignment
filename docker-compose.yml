@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: fraud_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build: ./backend
+    container_name: fraud_backend
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+
+      - MONGODB_URI=mongodb://mongo:27017/fraud-monitoring
+      - JWT_SECRET=mysecretkey123
+      - FRONTEND_URL=http://localhost:5173
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - ADMIN_SECRET_CODE=admin123
+    depends_on:
+      - mongo
+
+
+  frontend:
+    build: ./frontend
+    container_name: fraud_frontend
+    ports:
+      - "5173:5173"
+    environment:
+
+      - VITE_API_URL=http://localhost:5000/api
+      - VITE_SOCKET_URL=http://localhost:5000
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
